@@ -7,15 +7,12 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
-import { revalidatePath } from "next/cache";
 
 export default function ClientComponent() {
   let [isPending, startTransition] = useTransition();
   const [loggingOut, setLoggingOut] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [imageLoading, setImageLoading] = useState(false);
 
   useEffect(() => {
     if (isPending) return;
@@ -47,7 +44,6 @@ export default function ClientComponent() {
     startTransition(() => {
       uploadImageToServer(formData);
     });
-    setImageLoading(false);
   };
 
   const logOutAction = async (formData: FormData) => {
@@ -97,7 +93,6 @@ export default function ClientComponent() {
             className="border border-black rounded  py-1 px-2 hover:bg-gray-300"
             onClick={() => {
               setImageUrl(null);
-              setImageLoading(true);
             }}
           >
             {isPending ? "uploading..." : "upload"}{" "}

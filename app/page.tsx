@@ -1,102 +1,57 @@
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
+import { useTransition, useEffect, useState } from "react";
+import {
+  uploadImageToServer,
+  logOutFromSupabase,
+} from "@/actions/serverActions";
+import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 import { revalidatePath } from "next/cache";
-import sharp from "sharp";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: { message: string };
-}) {
-  const supabase = createClient();
+export default function ClientComponent() {
+  let [isPending, startTransition] = useTransition();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  console.log("user", user?.id);
+  useEffect(() => {
+    if (isPending) return;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select()
-    .eq("id", user?.id)
-    .single();
-
-  let imageLoading = false;
-
-  const uploadFile = async (formData: FormData) => {
-    "use server";
-
-    // redirect("/?message=uploading-image");
+    // THIS CODE WILL RUN AFTER THE SERVER ACTION
 
     const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const getImageFromSupabase = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      console.log("user", user?.id);
+      setUser(user);
 
-    const file = formData.get("file") as File;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select()
+        .eq("id", user?.id)
+        .single();
 
-    const buffer = await file.arrayBuffer();
-    const fileDataForName = file as File;
-    const fileName = fileDataForName?.name; // get the file name
-    const fileNameWithoutExtension = fileName?.split(".")[0]; // get the file name without the extension
+      setImageUrl(profile?.avatar_url);
+    };
 
-    const imageSize = 600;
+    getImageFromSupabase();
+  }, [isPending]);
 
-    const resizedImage = await sharp(buffer)
-      .resize(imageSize, imageSize)
-      .toFormat("jpeg")
-      .toBuffer();
-
-    const currentDate = new Date();
-    const secondsSince1970 = Math.floor(currentDate.getTime() / 1000);
-
-    // Upload the file to the server!!!!!
-    const { data, error } = await supabase.storage
-      .from("uploads")
-      .upload(
-        `${user?.id}/${secondsSince1970}_${fileNameWithoutExtension}.jpg`,
-        resizedImage
-      );
-
-    if (error) {
-      console.log(error);
-    }
-    console.log("data:", data);
-
-    // Update the user profile with the avatar url!!!!!
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({
-        avatar_url: `https://bnjiafgkkggnrizljoso.supabase.co/storage/v1/object/public/uploads/${data?.path}`,
-      })
-      .eq("id", user?.id);
-
-    if (profileError) {
-      console.log(profileError);
-    }
-
-    revalidatePath("/");
+  const uploadAction = async (formData: FormData) => {
+    startTransition(() => {
+      uploadImageToServer(formData);
+    });
+    setImageLoading(false);
   };
 
-  const logOut = async (formData: FormData) => {
-    "use server";
-
-    const supabase = createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    console.log("user", user?.id);
-
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.log(error);
-    }
-
-    return redirect("/");
+  const logOutAction = async (formData: FormData) => {
+    await logOutFromSupabase(formData);
   };
 
   return (
@@ -112,12 +67,13 @@ export default async function Home({
             <h1 className="text-4xl font-bold text-center">Welcome</h1>
             <p className="font-bold">User: {user.email}</p>
             <p className="text-center">You can upload images now.</p>
-            <form action={logOut} className="flex justify-center">
+            <form action={logOutAction} className="flex justify-center">
               <button
                 className="border border-black rounded  py-1 px-2 hover:bg-gray-300"
                 type="submit"
+                onClick={() => setLoggingOut(true)}
               >
-                Log out
+                {loggingOut ? <p>Logging Out...</p> : <p>Log Out</p>}
               </button>
             </form>
           </div>
@@ -133,20 +89,24 @@ export default async function Home({
             </p>
           </div>
         )}
-        <form action={uploadFile}>
+        <form action={uploadAction}>
           <input type="file" name="file" />
+
           <button
             type="submit"
             className="border border-black rounded  py-1 px-2 hover:bg-gray-300"
+            onClick={() => {
+              setImageUrl(null);
+              setImageLoading(true);
+            }}
           >
-            Upload
+            {isPending ? "uploading..." : "upload"}{" "}
           </button>
         </form>
         <div className=" w-80 h-80 border border-black rounded relative">
-          {imageLoading && <p>loading image</p>}
-          {profile?.avatar_url ? (
+          {imageUrl ? (
             <Image
-              src={profile?.avatar_url}
+              src={imageUrl}
               alt="avatar"
               fill={true}
               style={{ objectFit: "cover" }}
@@ -155,7 +115,7 @@ export default async function Home({
             <div className="w-full h-full bg-gray-100 flex flex-col justify-center">
               <p className="text-center p-8 text-black">
                 {user ? (
-                  <span>No image</span>
+                  <span>Avatar Image</span>
                 ) : (
                   <span>You need to be logged in to see your avatar</span>
                 )}

@@ -4,7 +4,7 @@
 
 The `AvatarUploader` component, along with its server-side functions, provides a comprehensive system for managing user avatars within a Next.js application using Supabase as the backend. It enables users to log in, view their current avatar, upload a new image as an avatar, and log out. This system includes real-time UI updates, Supabase integration for data management, and image processing via the `sharp` library for resizing images before upload.
 
-### Client-Side Component (`AvatarUploader`)
+### AvatarUploader Component
 
 #### Functionality
 
@@ -34,7 +34,7 @@ The `AvatarUploader` component, along with its server-side functions, provides a
 - **Link from `next/link`**: Used for navigation to the login page if the user is not logged in.
 - **Image from `next/image`**: Optimizes image display.
 
-### Server-Side Functions
+### Server Actions
 
 #### `uploadImageToServer(formData: FormData)`
 

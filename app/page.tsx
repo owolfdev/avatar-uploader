@@ -8,7 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function ClientComponent() {
+export default function AvatarUploader() {
   let [isPending, startTransition] = useTransition();
   const [loggingOut, setLoggingOut] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -17,11 +17,9 @@ export default function ClientComponent() {
   useEffect(() => {
     if (isPending) return;
 
-    // THIS CODE WILL RUN AFTER THE SERVER ACTION
-
     const supabase = createClient();
 
-    const getImageFromSupabase = async () => {
+    const getAvatarImageFromSupabase = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -37,7 +35,7 @@ export default function ClientComponent() {
       setImageUrl(profile?.avatar_url);
     };
 
-    getImageFromSupabase();
+    getAvatarImageFromSupabase();
   }, [isPending]);
 
   const uploadAction = async (formData: FormData) => {
@@ -46,23 +44,22 @@ export default function ClientComponent() {
     });
   };
 
-  const logOutAction = async (formData: FormData) => {
-    await logOutFromSupabase(formData);
+  const logOutAction = async () => {
+    await logOutFromSupabase();
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between flex flex-col gap-6 font-mono text-sm">
+    <main className="flex min-h-screen flex-col items-center justify-between py-12">
+      <div className="z-10 max-w-xl w-full items-center justify-between flex flex-col gap-4 font-mono">
         <h1 className="text-4xl font-bold text-center">Image Uploader</h1>
         <p className="text-center">
           This is an uploader for images built with Next.js and Supabase.{" "}
         </p>
 
         {user ? (
-          <div className="flex flex-col gap-4 border border-black rounded p-8">
-            <h1 className="text-4xl font-bold text-center">Welcome</h1>
+          <div className="flex flex-col gap-2">
             <p className="font-bold">User: {user.email}</p>
-            <p className="text-center">You can upload images now.</p>
+
             <form action={logOutAction} className="flex justify-center">
               <button
                 className="border border-black rounded  py-1 px-2 hover:bg-gray-300"
@@ -74,18 +71,17 @@ export default function ClientComponent() {
             </form>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 border border-black rounded p-8">
-            <h1 className="text-4xl font-bold text-center">Hello</h1>
+          <div className="">
             <p className="text-center">
               You must{" "}
               <Link className="underline font-bold" href="/login">
                 log in
               </Link>{" "}
-              before uploading.{" "}
+              to use this app.{" "}
             </p>
           </div>
         )}
-        <form action={uploadAction}>
+        <form action={uploadAction} className="flex flex-col gap-4 pt-4">
           <input type="file" name="file" />
 
           <button

@@ -38,8 +38,8 @@ export default async function Login({
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-lg w-full items-center justify-between flex flex-col gap-6 font-mono text-sm">
+    <main className="flex min-h-screen flex-col items-center justify-between p-24 ">
+      <div className="z-10 max-w-md w-full items-center justify-between flex flex-col gap-6 font-mono text-sm">
         <h1 className="font-bold text-4xl pb-4">Log In</h1>
         <form className="flex-1 flex flex-col w-full gap-2 text-foreground">
           <label className="text-md" htmlFor="email">

@@ -23,12 +23,12 @@ export const uploadImageToServer = async (formData: FormData) => {
     const filePath = `${user.id}/${timestamp}_${fileName}.jpg`;
 
     const { data, error } = await supabase.storage
-      .from("uploads")
+      .from("avatars")
       .upload(filePath, resizedImage);
 
     if (error) throw error;
 
-    const avatarUrl = `${SUPABASE_URL}/storage/v1/object/public/uploads/${data.path}`;
+    const avatarUrl = `${SUPABASE_URL}/storage/v1/object/public/avatars/${data.path}`;
     await updateUserProfile(user.id, avatarUrl, supabase);
   } catch (error) {
     console.error("Failed to upload image:", error);
